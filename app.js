@@ -256,7 +256,17 @@ function renderAll() {
   renderWeeklyThrows(player);
   renderStrikeZone();
   renderHeatMap('heatMapRHH', player.heatRHH);
-  renderHeatMap('heatMapLHH', player.heatLHH);
+  renderHeatMap('heatMapLHH', player.heatLHH: [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
+pitchMetrics: {
+  Fastball: {
+    ivb: "",
+    hb: "",
+    releaseHeight: "",
+    spinRate: "",
+    extension: "",
+    releaseTilt: ""
+  }
+});
   renderTeamDashboard();
 }
 
