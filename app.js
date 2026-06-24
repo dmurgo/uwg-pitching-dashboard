@@ -287,7 +287,6 @@ function updateFromTrackman(rows) {
       k: lhh.filter(r => r['KorBB'] === 'Strikeout').length,
     };
   });
-  renderAll();
 }
 
 function renderAll() {
@@ -306,7 +305,7 @@ function renderAll() {
 }
   renderStrikeZone();
   renderHeatMap('heatMapRHH', player.heatRHH);
-  renderHeatMap('heatMapLHH', player.heatLHH: [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
+renderHeatMap('heatMapLHH', player.heatLHH);
 pitchMetrics: {
   Fastball: {
     ivb: "",
