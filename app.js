@@ -292,6 +292,14 @@ function renderAll() {
   bindFields(player);
   renderPlatoon(player);
   renderWeeklyThrows(player);
+  function renderAll() {
+  const player = ensurePlayer(selectedPitcher);
+
+  renderMetrics(player);
+  renderPlatoon(player);
+  renderWeeklyThrows(player);
+  renderPitchMetrics(player);
+}
   renderStrikeZone();
   renderHeatMap('heatMapRHH', player.heatRHH);
   renderHeatMap('heatMapLHH', player.heatLHH: [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
