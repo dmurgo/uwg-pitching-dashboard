@@ -119,6 +119,44 @@ function renderPlatoon(player) {
 }
 
 function renderWeeklyThrows(player) {
+  function renderPitchMetrics(player) {
+  const tbody = document.querySelector("#pitchMetricsTable tbody");
+  tbody.innerHTML = "";
+
+  if (!player.pitchMetrics) {
+    player.pitchMetrics = {};
+  }
+
+  const pitchTypes = ["Fastball"];
+
+  pitchTypes.forEach(pitch => {
+    if (!player.pitchMetrics[pitch]) {
+      player.pitchMetrics[pitch] = {
+        ivb: "",
+        hb: "",
+        releaseHeight: "",
+        spinRate: "",
+        extension: "",
+        releaseTilt: ""
+      };
+    }
+
+    const row = player.pitchMetrics[pitch];
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${pitch}</td>
+      <td><input value="${row.ivb}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].ivb = this.value"></td>
+      <td><input value="${row.hb}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].hb = this.value"></td>
+      <td><input value="${row.releaseHeight}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].releaseHeight = this.value"></td>
+      <td><input value="${row.spinRate}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].spinRate = this.value"></td>
+      <td><input value="${row.extension}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].extension = this.value"></td>
+      <td><input value="${row.releaseTilt}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].releaseTilt = this.value"></td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
   const tbody = document.querySelector('#weeklyPlanTable tbody');
   tbody.innerHTML = '';
   const tr = document.createElement('tr');
