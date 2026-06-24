@@ -127,7 +127,13 @@ function renderWeeklyThrows(player) {
     player.pitchMetrics = {};
   }
 
-  const pitchTypes = ["Fastball"];
+  const pitchTypes = [
+  "Fastball",
+  "Changeup",
+  "Slider",
+  "Curveball",
+  "Splitter"
+];
 
   pitchTypes.forEach(pitch => {
     if (!player.pitchMetrics[pitch]) {
