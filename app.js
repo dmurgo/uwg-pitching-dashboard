@@ -11,9 +11,15 @@ function ensurePlayer(name) {
       platoon: { rhh: { bf: 0, h: 0, bb: 0, k: 0 }, lhh: { bf: 0, h: 0, bb: 0, k: 0 } },
       weeklyThrows: [0,0,0,0,0,0,0],
       heatRHH: [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
-      heatLHH: [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+      heatLHH: [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
+      pitchMetrics: {}
     };
   }
+
+  if (!dataStore.players[name].pitchMetrics) {
+    dataStore.players[name].pitchMetrics = {};
+  }
+
   return dataStore.players[name];
 }
 
@@ -29,6 +35,7 @@ function renderRoster(filter = '') {
   const list = document.getElementById('rosterList');
   const q = filter.toLowerCase();
   list.innerHTML = '';
+
   roster
     .filter(name => name.toLowerCase().includes(q))
     .forEach(name => {
@@ -59,6 +66,7 @@ function renderMetrics(player) {
 function bindFields(player) {
   const weekly = player.weeklyPlan;
   const review = player.review;
+
   const map = {
     weekOf: 'weekOf',
     availability: 'availability',
@@ -69,13 +77,18 @@ function bindFields(player) {
     attackCue: 'attackCue',
     nextOutingGoal: 'nextOutingGoal'
   };
+
   Object.entries(map).forEach(([id, key]) => {
     const el = document.getElementById(id);
+    if (!el) return;
+
     el.value = weekly[key] ?? '';
     el.oninput = () => {
       weekly[key] = el.value;
-      if (id === 'availability') renderTeamDashboard();
-      if (id === 'availability') renderMetrics(player);
+      if (id === 'availability') {
+        renderTeamDashboard();
+        renderMetrics(player);
+      }
     };
   });
 
@@ -87,8 +100,11 @@ function bindFields(player) {
     recoveryFocus: 'recoveryFocus',
     coachNotes: 'coachNotes'
   };
+
   Object.entries(reviewMap).forEach(([id, key]) => {
     const el = document.getElementById(id);
+    if (!el) return;
+
     el.value = review[key] ?? '';
     el.oninput = () => {
       review[key] = el.value;
@@ -103,6 +119,7 @@ function rate(part, whole) {
 function renderPlatoon(player) {
   const tbody = document.querySelector('#platoonTable tbody');
   tbody.innerHTML = '';
+
   [['Vs RHH', player.platoon.rhh], ['Vs LHH', player.platoon.lhh]].forEach(([label, row]) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -119,60 +136,58 @@ function renderPlatoon(player) {
 }
 
 function renderWeeklyThrows(player) {
-  const tbody = document.querySelector("#pitchMetricsTable tbody");
-  tbody.innerHTML = "";
+  const tbody = document.querySelector('#weeklyPlanTable tbody');
+  tbody.innerHTML = '';
 
-  if (!player.pitchMetrics) {
-    player.pitchMetrics = {};
-  }
+  const tr = document.createElement('tr');
+  const total = player.weeklyThrows.reduce((a, b) => a + Number(b || 0), 0);
 
-  const pitchTypes = [
-  "Fastball",
-  "Changeup",
-  "Slider",
-  "Curveball",
-  "Splitter"
-];
+  tr.innerHTML = [...player.weeklyThrows, total].map(v => `<td>${v}</td>`).join('');
+  tbody.appendChild(tr);
+}
+
+function renderPitchMetrics(player) {
+  const tbody = document.querySelector('#pitchMetricsTable tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+
+  const pitchTypes = ['Fastball', 'Changeup', 'Slider', 'Curveball', 'Splitter'];
 
   pitchTypes.forEach(pitch => {
-    if (!player.pitchMetrics[pitch]) {
-      player.pitchMetrics[pitch] = {
-        ivb: "",
-        hb: "",
-        releaseHeight: "",
-        spinRate: "",
-        extension: "",
-        releaseTilt: ""
-      };
-    }
+    const row = player.pitchMetrics[pitch] || {
+      count: 0,
+      velo: '--',
+      ivb: '--',
+      hb: '--',
+      releaseHeight: '--',
+      spinRate: '--',
+      extension: '--',
+      releaseTilt: '--'
+    };
 
-    const row = player.pitchMetrics[pitch];
+    const tr = document.createElement('tr');
 
-    const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${pitch}</td>
-      <td><input value="${row.ivb}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].ivb = this.value"></td>
-      <td><input value="${row.hb}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].hb = this.value"></td>
-      <td><input value="${row.releaseHeight}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].releaseHeight = this.value"></td>
-      <td><input value="${row.spinRate}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].spinRate = this.value"></td>
-      <td><input value="${row.extension}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].extension = this.value"></td>
-      <td><input value="${row.releaseTilt}" onchange="dataStore.players[selectedPitcher].pitchMetrics['${pitch}'].releaseTilt = this.value"></td>
+      <td>${row.count}</td>
+      <td>${row.velo}</td>
+      <td>${row.ivb}</td>
+      <td>${row.hb}</td>
+      <td>${row.releaseHeight}</td>
+      <td>${row.spinRate}</td>
+      <td>${row.extension}</td>
+      <td>${row.releaseTilt}</td>
     `;
 
     tbody.appendChild(tr);
   });
 }
-  const tbody = document.querySelector('#weeklyPlanTable tbody');
-  tbody.innerHTML = '';
-  const tr = document.createElement('tr');
-  const total = player.weeklyThrows.reduce((a, b) => a + Number(b || 0), 0);
-  tr.innerHTML = [...player.weeklyThrows, total].map(v => `<td>${v}</td>`).join('');
-  tbody.appendChild(tr);
-}
 
 function renderStrikeZone() {
   const grid = document.getElementById('attackZoneGrid');
   grid.innerHTML = '';
+
   for (let r = 0; r < 5; r++) {
     for (let c = 0; c < 5; c++) {
       const div = document.createElement('div');
@@ -195,18 +210,22 @@ function heatClass(v) {
 function renderHeatMap(elId, values) {
   const grid = document.getElementById(elId);
   grid.innerHTML = '';
+
   const topLabels = ['', 'Arm', 'Glove', 'Waste', 'Middle', 'Chase'];
+
   topLabels.forEach(label => {
     const d = document.createElement('div');
     d.className = label ? 'heat-label' : '';
     d.textContent = label;
     grid.appendChild(d);
   });
+
   ['Top', 'Heart', 'Bottom'].forEach((rowLabel, rIndex) => {
     const row = document.createElement('div');
     row.className = 'heat-label';
     row.textContent = rowLabel;
     grid.appendChild(row);
+
     values[rIndex].forEach(value => {
       const d = document.createElement('div');
       d.className = `heat-cell ${heatClass(value)}`;
@@ -219,9 +238,11 @@ function renderHeatMap(elId, values) {
 function renderTeamDashboard() {
   const tbody = document.querySelector('#teamDashboardTable tbody');
   tbody.innerHTML = '';
+
   roster.forEach(name => {
     const player = ensurePlayer(name);
     const tr = document.createElement('tr');
+
     tr.innerHTML = `
       <td>${name}</td>
       <td>${pct(player.metrics.strikePct)}</td>
@@ -231,102 +252,28 @@ function renderTeamDashboard() {
       <td>${dec(player.metrics.walkRate)}</td>
       <td>${player.weeklyPlan.availability || player.metrics.availability}</td>
     `;
+
     tbody.appendChild(tr);
-  });
-}
-
-function parseCsv(text) {
-  const lines = text.split(/\r?\n/).filter(Boolean);
-  if (!lines.length) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  return lines.slice(1).map(line => {
-    const cols = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-    const row = {};
-    headers.forEach((h, i) => row[h] = cols[i] ?? '');
-    return row;
-  });
-}
-
-function updateFromTrackman(rows) {
-  const grouped = {};
-  rows.forEach(row => {
-    const name = row['Pitcher'];
-    if (!name) return;
-    if (!grouped[name]) grouped[name] = [];
-    grouped[name].push(row);
-  });
-
-  Object.entries(grouped).forEach(([name, playerRows]) => {
-    const player = ensurePlayer(name);
-    const total = playerRows.length;
-    const strikeRows = playerRows.filter(r => ['Called Strike', 'Swinging Strike', 'FoulBall', 'InPlay'].includes(r['PitchCall']));
-    const whiffRows = playerRows.filter(r => ['Swinging Strike', 'Swinging Strike (Blocked)'].includes(r['PitchCall']));
-    const zeroStrikeCount = playerRows.filter(r => String(r['Strikes']) === '0').length;
-    const firstPitchStrikeRows = playerRows.filter(r => String(r['Strikes']) === '0' && ['Called Strike', 'Swinging Strike', 'FoulBall', 'InPlay'].includes(r['PitchCall'])).length;
-    const zoneRows = playerRows.filter(r => ['Called Strike', 'Swinging Strike'].includes(r['PitchCall']));
-    const walkRows = playerRows.filter(r => r['KorBB'] === 'Walk');
-
-    player.metrics.strikePct = total ? strikeRows.length / total : 0;
-    player.metrics.firstPitchPct = zeroStrikeCount ? firstPitchStrikeRows / zeroStrikeCount : 0;
-    player.metrics.zonePct = total ? zoneRows.length / total : 0;
-    player.metrics.whiffPct = total ? whiffRows.length / total : 0;
-    player.metrics.walkRate = total ? walkRows.length / total : 0;
-
-    const rhh = playerRows.filter(r => r['BatterSide'] === 'Right');
-    const lhh = playerRows.filter(r => r['BatterSide'] === 'Left');
-    player.platoon.rhh = {
-      bf: rhh.length,
-      h: rhh.filter(r => ['Single', 'Double', 'Triple', 'HomeRun'].includes(r['PlayResult'])).length,
-      bb: rhh.filter(r => r['KorBB'] === 'Walk').length,
-      k: rhh.filter(r => r['KorBB'] === 'Strikeout').length,
-    };
-    player.platoon.lhh = {
-      bf: lhh.length,
-      h: lhh.filter(r => ['Single', 'Double', 'Triple', 'HomeRun'].includes(r['PlayResult'])).length,
-      bb: lhh.filter(r => r['KorBB'] === 'Walk').length,
-      k: lhh.filter(r => r['KorBB'] === 'Strikeout').length,
-    };
   });
 }
 
 function renderAll() {
   const player = ensurePlayer(selectedPitcher);
+
   renderRoster(document.getElementById('pitcherSearch').value);
   renderMetrics(player);
   bindFields(player);
   renderPlatoon(player);
+  renderPitchMetrics(player);
   renderWeeklyThrows(player);
-  function renderAll() {
-  const player = ensurePlayer(selectedPitcher);
-
-  renderMetrics(player);
-  renderPlatoon(player);
-  renderWeeklyThrows(player);
-}
   renderStrikeZone();
   renderHeatMap('heatMapRHH', player.heatRHH);
-renderHeatMap('heatMapLHH', player.heatLHH);
-pitchMetrics: {
-  Fastball: {
-    ivb: "",
-    hb: "",
-    releaseHeight: "",
-    spinRate: "",
-    extension: "",
-    releaseTilt: ""
-  }
-});
+  renderHeatMap('heatMapLHH', player.heatLHH);
   renderTeamDashboard();
 }
 
 document.getElementById('pitcherSearch').addEventListener('input', (e) => renderRoster(e.target.value));
 document.getElementById('resetDataBtn').addEventListener('click', () => window.location.reload());
-document.getElementById('csvFile').addEventListener('change', async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const text = await file.text();
-  updateFromTrackman(parseCsv(text));
-});
 
 roster.forEach(ensurePlayer);
 renderAll();
