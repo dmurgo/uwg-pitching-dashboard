@@ -1,1 +1,245 @@
-index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UWG Pitching Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-mark">UWG</div>
+        <div>
+          <h1>Pitching Dashboard</h1>
+          <p>University of West Georgia</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <label for="csvFile" class="panel-title">TrackMan CSV Upload</label>
+        <input id="csvFile" type="file" accept=".csv" />
+        <p class="hint">Optional. Upload a TrackMan export to calculate live player metrics in-browser.</p>
+      </div>
+
+      <div class="panel">
+        <label for="pitcherSearch" class="panel-title">Find Pitcher</label>
+        <input id="pitcherSearch" type="text" placeholder="Search roster" />
+      </div>
+
+      <div class="panel roster-panel">
+        <div class="panel-title">Roster</div>
+        <ul id="rosterList" class="roster-list"></ul>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <section class="hero-card">
+        <div>
+          <p class="eyebrow">Player card + staff dashboard</p>
+          <h2 id="selectedPitcherName">Select a pitcher</h2>
+          <p id="selectedPitcherSubtitle">Review workload, planning, platoon splits, and zone visuals.</p>
+        </div>
+        <div class="hero-actions">
+          <button id="resetDataBtn" class="secondary-btn">Reset demo data</button>
+        </div>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="card metric-card">
+          <span>Strike %</span>
+          <strong id="metricStrike">--</strong>
+        </article>
+        <article class="card metric-card">
+          <span>1st Pitch Strike %</span>
+          <strong id="metricFirstPitch">--</strong>
+        </article>
+        <article class="card metric-card">
+          <span>Zone %</span>
+          <strong id="metricZone">--</strong>
+        </article>
+        <article class="card metric-card">
+          <span>Whiff %</span>
+          <strong id="metricWhiff">--</strong>
+        </article>
+        <article class="card metric-card">
+          <span>Walk Rate</span>
+          <strong id="metricWalkRate">--</strong>
+        </article>
+        <article class="card metric-card">
+          <span>Availability</span>
+          <strong id="metricAvailability">--</strong>
+        </article>
+      </section>
+
+      <section class="two-column">
+        <article class="card">
+          <div class="section-header">
+            <h3>Weekly Plan</h3>
+          </div>
+          <div class="form-grid">
+            <label>
+              Week of
+              <input id="weekOf" type="text" placeholder="e.g. Feb 3" />
+            </label>
+            <label>
+              Availability
+              <select id="availability">
+                <option>Available</option>
+                <option>Limited</option>
+                <option>Recovery</option>
+              </select>
+            </label>
+            <label>
+              Weekly focus
+              <textarea id="weeklyFocus" rows="2"></textarea>
+            </label>
+            <label>
+              Bullpen focus
+              <textarea id="bullpenFocus" rows="2"></textarea>
+            </label>
+            <label>
+              Vs RHH plan
+              <textarea id="planRHH" rows="2"></textarea>
+            </label>
+            <label>
+              Vs LHH plan
+              <textarea id="planLHH" rows="2"></textarea>
+            </label>
+            <label>
+              Attack cue
+              <textarea id="attackCue" rows="2"></textarea>
+            </label>
+            <label>
+              Next outing goal
+              <textarea id="nextOutingGoal" rows="2"></textarea>
+            </label>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="section-header">
+            <h3>Review Notes</h3>
+          </div>
+          <div class="form-grid">
+            <label>
+              Self grade (1-10)
+              <input id="selfGrade" type="number" min="1" max="10" />
+            </label>
+            <label>
+              Coach grade (1-10)
+              <input id="coachGrade" type="number" min="1" max="10" />
+            </label>
+            <label>
+              What played
+              <textarea id="whatPlayed" rows="3"></textarea>
+            </label>
+            <label>
+              What needs work
+              <textarea id="whatNeedsWork" rows="3"></textarea>
+            </label>
+            <label>
+              Recovery focus
+              <textarea id="recoveryFocus" rows="3"></textarea>
+            </label>
+            <label>
+              Coach notes
+              <textarea id="coachNotes" rows="3"></textarea>
+            </label>
+          </div>
+        </article>
+      </section>
+
+      <section class="two-column">
+        <article class="card">
+          <div class="section-header">
+            <h3>Platoon Splits</h3>
+          </div>
+          <table class="data-table" id="platoonTable">
+            <thead>
+              <tr>
+                <th>Side</th>
+                <th>BF</th>
+                <th>H</th>
+                <th>BB</th>
+                <th>K</th>
+                <th>K%</th>
+                <th>BB%</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </article>
+
+        <article class="card">
+          <div class="section-header">
+            <h3>Weekly Throw Plan</h3>
+          </div>
+          <table class="data-table" id="weeklyPlanTable">
+            <thead>
+              <tr>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+                <th>Sun</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </article>
+      </section>
+
+      <section class="three-column">
+        <article class="card zone-card">
+          <div class="section-header">
+            <h3>Attack Zone</h3>
+          </div>
+          <div class="strike-zone" id="attackZoneGrid"></div>
+        </article>
+
+        <article class="card zone-card">
+          <div class="section-header">
+            <h3>Vs RHH Heat Map</h3>
+          </div>
+          <div class="heat-grid" id="heatMapRHH"></div>
+        </article>
+
+        <article class="card zone-card">
+          <div class="section-header">
+            <h3>Vs LHH Heat Map</h3>
+          </div>
+          <div class="heat-grid" id="heatMapLHH"></div>
+        </article>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <h3>Team Dashboard</h3>
+        </div>
+        <table class="data-table" id="teamDashboardTable">
+          <thead>
+            <tr>
+              <th>Pitcher</th>
+              <th>Strike %</th>
+              <th>1st Pitch %</th>
+              <th>Zone %</th>
+              <th>Whiff %</th>
+              <th>Walk Rate</th>
+              <th>Availability</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
