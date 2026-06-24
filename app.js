@@ -267,9 +267,9 @@ function renderAll() {
   renderPitchMetrics(player);
   renderWeeklyThrows(player);
   renderStrikeZone();
-  renderHeatMap('heatMapRHH', player.heatRHH);
-  renderHeatMap('heatMapLHH', player.heatLHH);
-  renderTeamDashboard();
+renderHeatMap('heatMapRHH', player.heatRHH);
+renderHeatMap('heatMapLHH', player.heatLHH);
+renderTeamDashboard();
 }
 
 document.getElementById('pitcherSearch').addEventListener('input', (e) => renderRoster(e.target.value));
