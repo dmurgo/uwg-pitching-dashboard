@@ -119,7 +119,6 @@ function renderPlatoon(player) {
 }
 
 function renderWeeklyThrows(player) {
-  function renderPitchMetrics(player) {
   const tbody = document.querySelector("#pitchMetricsTable tbody");
   tbody.innerHTML = "";
 
@@ -304,7 +303,6 @@ function renderAll() {
   renderMetrics(player);
   renderPlatoon(player);
   renderWeeklyThrows(player);
-  renderPitchMetrics(player);
 }
   renderStrikeZone();
   renderHeatMap('heatMapRHH', player.heatRHH);
