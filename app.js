@@ -5,13 +5,48 @@ let selectedPitcher = roster[0];
 function ensurePlayer(name) {
   if (!dataStore.players[name]) {
     dataStore.players[name] = {
-      metrics: { strikePct: 0, firstPitchPct: 0, zonePct: 0, whiffPct: 0, walkRate: 0, availability: 'Available' },
-      weeklyPlan: { weekOf: '', availability: 'Available', weeklyFocus: '', bullpenFocus: '', planRHH: '', planLHH: '', attackCue: '', nextOutingGoal: '' },
-      review: { selfGrade: '', coachGrade: '', whatPlayed: '', whatNeedsWork: '', recoveryFocus: '', coachNotes: '' },
-      platoon: { rhh: { bf: 0, h: 0, bb: 0, k: 0 }, lhh: { bf: 0, h: 0, bb: 0, k: 0 } },
-      weeklyThrows: [0,0,0,0,0,0,0],
-      heatRHH: [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]],
-      heatLHH: [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+      metrics: {
+        strikePct: 0,
+        firstPitchPct: 0,
+        zonePct: 0,
+        whiffPct: 0,
+        walkRate: 0,
+        availability: 'Available'
+      },
+      weeklyPlan: {
+        weekOf: '',
+        availability: 'Available',
+        weeklyFocus: '',
+        bullpenFocus: '',
+        planRHH: '',
+        planLHH: '',
+        attackCue: '',
+        nextOutingGoal: ''
+      },
+      review: {
+        selfGrade: '',
+        coachGrade: '',
+        whatPlayed: '',
+        whatNeedsWork: '',
+        recoveryFocus: '',
+        coachNotes: ''
+      },
+      platoon: {
+        rhh: { bf: 0, h: 0, bb: 0, k: 0 },
+        lhh: { bf: 0, h: 0, bb: 0, k: 0 }
+      },
+      weeklyThrows: [0, 0, 0, 0, 0, 0, 0],
+      heatRHH: [
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0]
+      ],
+      heatLHH: [
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0]
+      ],
+      pitchMetrics: []
     };
   }
   return dataStore.players[name];
@@ -49,17 +84,24 @@ function rosterNameMatches(trackmanName) {
 }
 
 function pct(v) {
-  return typeof v === 'number' && Number.isFinite(v) ? `${Math.round(v * 100)}%` : '--';
+  return typeof v === 'number' && Number.isFinite(v)
+    ? `${Math.round(v * 100)}%`
+    : '--';
 }
 
-function dec(v) {
-  return typeof v === 'number' && Number.isFinite(v) ? v.toFixed(2) : '--';
+function dec(v, digits = 2) {
+  return typeof v === 'number' && Number.isFinite(v)
+    ? v.toFixed(digits)
+    : '--';
 }
 
 function renderRoster(filter = '') {
   const list = document.getElementById('rosterList');
+  if (!list) return;
+
   const q = filter.toLowerCase();
   list.innerHTML = '';
+
   roster
     .filter(name => name.toLowerCase().includes(q))
     .forEach(name => {
@@ -77,20 +119,26 @@ function renderRoster(filter = '') {
 }
 
 function renderMetrics(player) {
-  document.getElementById('selectedPitcherName').textContent = selectedPitcher;
-  document.getElementById('selectedPitcherSubtitle').textContent = 'Player card, weekly plan, splits, and visual zones.';
-  document.getElementById('metricStrike').textContent = pct(player.metrics.strikePct);
-  document.getElementById('metricFirstPitch').textContent = pct(player.metrics.firstPitchPct);
-  document.getElementById('metricZone').textContent = pct(player.metrics.zonePct);
-  document.getElementById('metricWhiff').textContent = pct(player.metrics.whiffPct);
-  document.getElementById('metricWalkRate').textContent = dec(player.metrics.walkRate);
-  document.getElementById('metricAvailability').textContent = player.weeklyPlan.availability || player.metrics.availability;
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+
+  setText('selectedPitcherName', selectedPitcher);
+  setText('selectedPitcherSubtitle', 'Player card, weekly plan, splits, and visual zones.');
+  setText('metricStrike', pct(player.metrics.strikePct));
+  setText('metricFirstPitch', pct(player.metrics.firstPitchPct));
+  setText('metricZone', pct(player.metrics.zonePct));
+  setText('metricWhiff', pct(player.metrics.whiffPct));
+  setText('metricWalkRate', dec(player.metrics.walkRate));
+  setText('metricAvailability', player.weeklyPlan.availability || player.metrics.availability);
 }
 
 function bindFields(player) {
   const weekly = player.weeklyPlan;
   const review = player.review;
-  const map = {
+
+  const weeklyMap = {
     weekOf: 'weekOf',
     availability: 'availability',
     weeklyFocus: 'weeklyFocus',
@@ -100,13 +148,17 @@ function bindFields(player) {
     attackCue: 'attackCue',
     nextOutingGoal: 'nextOutingGoal'
   };
-  Object.entries(map).forEach(([id, key]) => {
+
+  Object.entries(weeklyMap).forEach(([id, key]) => {
     const el = document.getElementById(id);
+    if (!el) return;
     el.value = weekly[key] ?? '';
     el.oninput = () => {
       weekly[key] = el.value;
-      if (id === 'availability') renderTeamDashboard();
-      if (id === 'availability') renderMetrics(player);
+      if (id === 'availability') {
+        renderTeamDashboard();
+        renderMetrics(player);
+      }
     };
   });
 
@@ -118,8 +170,10 @@ function bindFields(player) {
     recoveryFocus: 'recoveryFocus',
     coachNotes: 'coachNotes'
   };
+
   Object.entries(reviewMap).forEach(([id, key]) => {
     const el = document.getElementById(id);
+    if (!el) return;
     el.value = review[key] ?? '';
     el.oninput = () => {
       review[key] = el.value;
@@ -133,7 +187,10 @@ function rate(part, whole) {
 
 function renderPlatoon(player) {
   const tbody = document.querySelector('#platoonTable tbody');
+  if (!tbody) return;
+
   tbody.innerHTML = '';
+
   [['Vs RHH', player.platoon.rhh], ['Vs LHH', player.platoon.lhh]].forEach(([label, row]) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -147,23 +204,76 @@ function renderPlatoon(player) {
     `;
     tbody.appendChild(tr);
   });
-} 
-
-<!-- Create renderPitchMetrics
--->
+}
 
 function renderWeeklyThrows(player) {
   const tbody = document.querySelector('#weeklyPlanTable tbody');
+  if (!tbody) return;
+
   tbody.innerHTML = '';
   const tr = document.createElement('tr');
   const total = player.weeklyThrows.reduce((a, b) => a + Number(b || 0), 0);
-  tr.innerHTML = [...player.weeklyThrows, total].map(v => `<td>${v}</td>`).join('');
+  tr.innerHTML = [...player.weeklyThrows, total]
+    .map(v => `<td>${v}</td>`)
+    .join('');
   tbody.appendChild(tr);
+}
+
+function renderPitchMetrics(player) {
+  const container = document.getElementById('pitchMetrics');
+  if (!container) return;
+
+  const rows = player.pitchMetrics || [];
+
+  if (!rows.length) {
+    container.innerHTML = `
+      <div class="empty-state">No pitch metric data yet.</div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Pitch</th>
+          <th>Used</th>
+          <th>Avg Velo</th>
+          <th>Max Velo</th>
+          <th>Spin</th>
+          <th>IVB</th>
+          <th>HB</th>
+          <th>Whiff %</th>
+          <th>Strike %</th>
+          <th>Zone %</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(row => `
+          <tr>
+            <td>${row.pitchType}</td>
+            <td>${row.count}</td>
+            <td>${row.avgVelo}</td>
+            <td>${row.maxVelo}</td>
+            <td>${row.avgSpin}</td>
+            <td>${row.avgIVB}</td>
+            <td>${row.avgHB}</td>
+            <td>${pct(row.whiffPct)}</td>
+            <td>${pct(row.strikePct)}</td>
+            <td>${pct(row.zonePct)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 }
 
 function renderStrikeZone() {
   const grid = document.getElementById('attackZoneGrid');
+  if (!grid) return;
+
   grid.innerHTML = '';
+
   for (let r = 0; r < 5; r++) {
     for (let c = 0; c < 5; c++) {
       const div = document.createElement('div');
@@ -185,19 +295,24 @@ function heatClass(v) {
 
 function renderHeatMap(elId, values) {
   const grid = document.getElementById(elId);
+  if (!grid) return;
+
   grid.innerHTML = '';
   const topLabels = ['', 'Arm', 'Glove', 'Waste', 'Middle', 'Chase'];
+
   topLabels.forEach(label => {
     const d = document.createElement('div');
     d.className = label ? 'heat-label' : '';
     d.textContent = label;
     grid.appendChild(d);
   });
+
   ['Top', 'Heart', 'Bottom'].forEach((rowLabel, rIndex) => {
     const row = document.createElement('div');
     row.className = 'heat-label';
     row.textContent = rowLabel;
     grid.appendChild(row);
+
     values[rIndex].forEach(value => {
       const d = document.createElement('div');
       d.className = `heat-cell ${heatClass(value)}`;
@@ -209,7 +324,10 @@ function renderHeatMap(elId, values) {
 
 function renderTeamDashboard() {
   const tbody = document.querySelector('#teamDashboardTable tbody');
+  if (!tbody) return;
+
   tbody.innerHTML = '';
+
   roster.forEach(name => {
     const player = ensurePlayer(name);
     const tr = document.createElement('tr');
@@ -227,7 +345,12 @@ function renderTeamDashboard() {
 }
 
 function buildHeatMap(rows) {
-  const grid = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]];
+  const grid = [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0]
+  ];
+
   rows.forEach(r => {
     const side = Number(r.PlateLocSide);
     const height = Number(r.PlateLocHeight);
@@ -247,7 +370,10 @@ function buildHeatMap(rows) {
   });
 
   const max = Math.max(1, ...grid.flat());
-  return grid.map(row => row.map(v => v === 0 ? 0 : Math.max(1, Math.min(5, Math.round((v / max) * 5)))));
+
+  return grid.map(row =>
+    row.map(v => (v === 0 ? 0 : Math.max(1, Math.min(5, Math.round((v / max) * 5)))))
+  );
 }
 
 function parseCsv(text) {
@@ -287,12 +413,34 @@ function parseCsv(text) {
   }
 
   if (!rows.length) return [];
+
   const headers = rows[0].map(h => String(h).trim());
+
   return rows.slice(1).map(cols => {
     const record = {};
-    headers.forEach((h, i) => { record[h] = cols[i] ?? ''; });
+    headers.forEach((h, i) => {
+      record[h] = cols[i] ?? '';
+    });
     return record;
   });
+}
+
+function getNumericAverage(rows, key, digits = 1) {
+  const vals = rows
+    .map(r => Number(r[key]))
+    .filter(v => Number.isFinite(v));
+
+  if (!vals.length) return '--';
+  return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(digits);
+}
+
+function getNumericMax(rows, key, digits = 1) {
+  const vals = rows
+    .map(r => Number(r[key]))
+    .filter(v => Number.isFinite(v));
+
+  if (!vals.length) return '--';
+  return Math.max(...vals).toFixed(digits);
 }
 
 function updateFromTrackman(rows) {
@@ -302,6 +450,7 @@ function updateFromTrackman(rows) {
   rows.forEach(row => {
     const mappedName = rosterNameMatches(row.Pitcher);
     if (!mappedName) return;
+
     matched.add(mappedName);
     if (!grouped[mappedName]) grouped[mappedName] = [];
     grouped[mappedName].push(row);
@@ -310,18 +459,43 @@ function updateFromTrackman(rows) {
   Object.entries(grouped).forEach(([name, playerRows]) => {
     const player = ensurePlayer(name);
     const total = playerRows.length;
-    const strikeRows = playerRows.filter(r => ['StrikeCalled', 'StrikeSwinging', 'FoulBall', 'FoulBallNotFieldable', 'InPlay'].includes(r.PitchCall));
-    const whiffRows = playerRows.filter(r => ['StrikeSwinging', 'StrikeSwingingBlocked'].includes(r.PitchCall));
+
+    const strikeRows = playerRows.filter(r =>
+      ['StrikeCalled', 'StrikeSwinging', 'FoulBall', 'FoulBallNotFieldable', 'InPlay'].includes(r.PitchCall)
+    );
+
+    const whiffRows = playerRows.filter(r =>
+      ['StrikeSwinging', 'StrikeSwingingBlocked'].includes(r.PitchCall)
+    );
+
     const firstPitchRows = playerRows.filter(r => String(r.PitchofPA) === '1');
-    const firstPitchStrikeRows = firstPitchRows.filter(r => ['StrikeCalled', 'StrikeSwinging', 'FoulBall', 'FoulBallNotFieldable', 'InPlay'].includes(r.PitchCall));
+
+    const firstPitchStrikeRows = firstPitchRows.filter(r =>
+      ['StrikeCalled', 'StrikeSwinging', 'FoulBall', 'FoulBallNotFieldable', 'InPlay'].includes(r.PitchCall)
+    );
+
     const zoneRows = playerRows.filter(r => {
       const side = Number(r.PlateLocSide);
       const height = Number(r.PlateLocHeight);
-      return Number.isFinite(side) && Number.isFinite(height) && side >= -0.83 && side <= 0.83 && height >= 1.5 && height <= 3.5;
+      return (
+        Number.isFinite(side) &&
+        Number.isFinite(height) &&
+        side >= -0.83 &&
+        side <= 0.83 &&
+        height >= 1.5 &&
+        height <= 3.5
+      );
     });
 
-    const plateAppearanceKeys = new Set(playerRows.map(r => `${r.GameID}|${r.Inning}|${r['Top/Bottom']}|${r.PAofInning}|${r.Batter}`));
-    const walkPAKeys = new Set(playerRows.filter(r => r.KorBB === 'Walk').map(r => `${r.GameID}|${r.Inning}|${r['Top/Bottom']}|${r.PAofInning}|${r.Batter}`));
+    const plateAppearanceKeys = new Set(
+      playerRows.map(r => `${r.GameID}|${r.Inning}|${r['Top/Bottom']}|${r.PAofInning}|${r.Batter}`)
+    );
+
+    const walkPAKeys = new Set(
+      playerRows
+        .filter(r => r.KorBB === 'Walk')
+        .map(r => `${r.GameID}|${r.Inning}|${r['Top/Bottom']}|${r.PAofInning}|${r.Batter}`)
+    );
 
     player.metrics.strikePct = total ? strikeRows.length / total : 0;
     player.metrics.firstPitchPct = firstPitchRows.length ? firstPitchStrikeRows.length / firstPitchRows.length : 0;
@@ -331,35 +505,89 @@ function updateFromTrackman(rows) {
 
     const rhh = playerRows.filter(r => r.BatterSide === 'Right');
     const lhh = playerRows.filter(r => r.BatterSide === 'Left');
+
     player.platoon.rhh = {
       bf: rhh.length,
       h: rhh.filter(r => ['Single', 'Double', 'Triple', 'HomeRun'].includes(r.PlayResult)).length,
       bb: rhh.filter(r => r.KorBB === 'Walk').length,
-      k: rhh.filter(r => r.KorBB === 'Strikeout').length,
+      k: rhh.filter(r => r.KorBB === 'Strikeout').length
     };
+
     player.platoon.lhh = {
       bf: lhh.length,
       h: lhh.filter(r => ['Single', 'Double', 'Triple', 'HomeRun'].includes(r.PlayResult)).length,
       bb: lhh.filter(r => r.KorBB === 'Walk').length,
-      k: lhh.filter(r => r.KorBB === 'Strikeout').length,
+      k: lhh.filter(r => r.KorBB === 'Strikeout').length
     };
 
     player.heatRHH = buildHeatMap(rhh);
     player.heatLHH = buildHeatMap(lhh);
+
+    const pitchGroups = {};
+
+    playerRows.forEach(r => {
+      const pitchType = r.TaggedPitchType || r.AutoPitchType || 'Unknown';
+      if (!pitchGroups[pitchType]) pitchGroups[pitchType] = [];
+      pitchGroups[pitchType].push(r);
+    });
+
+    player.pitchMetrics = Object.entries(pitchGroups)
+      .map(([pitchType, rows]) => {
+        const count = rows.length;
+
+        const pitchStrikeRows = rows.filter(r =>
+          ['StrikeCalled', 'StrikeSwinging', 'FoulBall', 'FoulBallNotFieldable', 'InPlay'].includes(r.PitchCall)
+        );
+
+        const pitchWhiffRows = rows.filter(r =>
+          ['StrikeSwinging', 'StrikeSwingingBlocked'].includes(r.PitchCall)
+        );
+
+        const pitchZoneRows = rows.filter(r => {
+          const side = Number(r.PlateLocSide);
+          const height = Number(r.PlateLocHeight);
+          return (
+            Number.isFinite(side) &&
+            Number.isFinite(height) &&
+            side >= -0.83 &&
+            side <= 0.83 &&
+            height >= 1.5 &&
+            height <= 3.5
+          );
+        });
+
+        return {
+          pitchType,
+          count,
+          avgVelo: getNumericAverage(rows, 'RelSpeed', 1),
+          maxVelo: getNumericMax(rows, 'RelSpeed', 1),
+          avgSpin: getNumericAverage(rows, 'SpinRate', 0),
+          avgIVB: getNumericAverage(rows, 'InducedVertBreak', 1),
+          avgHB: getNumericAverage(rows, 'HorzBreak', 1),
+          whiffPct: count ? pitchWhiffRows.length / count : 0,
+          strikePct: count ? pitchStrikeRows.length / count : 0,
+          zonePct: count ? pitchZoneRows.length / count : 0
+        };
+      })
+      .sort((a, b) => b.count - a.count);
   });
 
   const subtitle = matched.size
     ? `Loaded TrackMan data for ${matched.size} rostered pitcher${matched.size === 1 ? '' : 's'}.`
     : 'No roster names matched the uploaded TrackMan file.';
-  document.getElementById('selectedPitcherSubtitle').textContent = subtitle;
+
+  const subtitleEl = document.getElementById('selectedPitcherSubtitle');
+  if (subtitleEl) subtitleEl.textContent = subtitle;
+
   renderAll();
 }
 
 function renderAll() {
   const player = ensurePlayer(selectedPitcher);
-  renderRoster(document.getElementById('pitcherSearch').value);
+  renderRoster(document.getElementById('pitcherSearch')?.value || '');
   renderMetrics(player);
   bindFields(player);
+  renderPitchMetrics(player);
   renderPlatoon(player);
   renderWeeklyThrows(player);
   renderStrikeZone();
@@ -368,11 +596,18 @@ function renderAll() {
   renderTeamDashboard();
 }
 
-document.getElementById('pitcherSearch').addEventListener('input', (e) => renderRoster(e.target.value));
-document.getElementById('resetDataBtn').addEventListener('click', () => window.location.reload());
-document.getElementById('csvFile').addEventListener('change', async (e) => {
+document.getElementById('pitcherSearch')?.addEventListener('input', e => {
+  renderRoster(e.target.value);
+});
+
+document.getElementById('resetDataBtn')?.addEventListener('click', () => {
+  window.location.reload();
+});
+
+document.getElementById('csvFile')?.addEventListener('change', async e => {
   const file = e.target.files?.[0];
   if (!file) return;
+
   const text = await file.text();
   const rows = parseCsv(text);
   updateFromTrackman(rows);
