@@ -147,7 +147,10 @@ function renderPlatoon(player) {
     `;
     tbody.appendChild(tr);
   });
-}
+} 
+
+<!-- Create renderPitchMetrics
+-->
 
 function renderWeeklyThrows(player) {
   const tbody = document.querySelector('#weeklyPlanTable tbody');
