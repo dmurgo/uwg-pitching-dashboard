@@ -154,6 +154,36 @@
       <section class="two-column">
         <article class="card">
           <div class="section-header">
+            <h3>TrackMan Pitch Metrics</h3>
+          </div>
+          <div id="pitchMetrics"></div>
+        </article>
+
+        <article class="card">
+          <div class="section-header">
+            <h3>Weekly Throw Plan</h3>
+          </div>
+          <table class="data-table" id="weeklyPlanTable">
+            <thead>
+              <tr>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+                <th>Sun</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </article>
+      </section>
+
+      <section class="two-column">
+        <article class="card">
+          <div class="section-header">
             <h3>Platoon Splits</h3>
           </div>
           <table class="data-table" id="platoonTable">
@@ -174,44 +204,26 @@
 
         <article class="card">
           <div class="section-header">
-            <section class="card">
-  <div class="section-header">
-    <h3>TrackMan Pitch Metrics</h3>
-  </div>
-
-  <table class="data-table" id="pitchMetricsTable">
-    <thead>
-      <tr>
-        <th>Pitch</th>
-        <th>IVB</th>
-        <th>HB</th>
-        <th>Rel Height</th>
-        <th>Spin</th>
-        <th>Extension</th>
-        <th>Release Tilt</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</section>
-<h3>Weekly Plan</h3>
-            <h3>Weekly Throw Plan</h3>
+            <h3>Pitch Notes / Arsenal Thoughts</h3>
           </div>
-          <table class="data-table" id="weeklyPlanTable">
-            <thead>
-              <tr>
-                <th>Mon</th>
-                <th>Tue</th>
-                <th>Wed</th>
-                <th>Thu</th>
-                <th>Fri</th>
-                <th>Sat</th>
-                <th>Sun</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+          <div class="form-grid">
+            <label>
+              Best pitch today
+              <textarea rows="2"></textarea>
+            </label>
+            <label>
+              Pitch to improve
+              <textarea rows="2"></textarea>
+            </label>
+            <label>
+              Best swing-and-miss pitch
+              <textarea rows="2"></textarea>
+            </label>
+            <label>
+              Best contact-management pitch
+              <textarea rows="2"></textarea>
+            </label>
+          </div>
         </article>
       </section>
 
@@ -264,3 +276,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+
