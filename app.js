@@ -237,30 +237,30 @@ function renderPitchMetrics(player) {
       <thead>
         <tr>
           <th>Pitch</th>
-          <th>Used</th>
+          <th>Usage %</th>
           <th>Avg Velo</th>
           <th>Max Velo</th>
           <th>Spin</th>
           <th>IVB</th>
           <th>HB</th>
-          <th>Whiff %</th>
-          <th>Strike %</th>
-          <th>Zone %</th>
+          <th>Rel Height</th>
+          <th>Extension</th>
+          <th>Tilt</th>
         </tr>
       </thead>
       <tbody>
         ${rows.map(row => `
           <tr>
             <td>${row.pitchType}</td>
-            <td>${row.count}</td>
+            <td>${pct(row.usagePct)}</td>
             <td>${row.avgVelo}</td>
             <td>${row.maxVelo}</td>
             <td>${row.avgSpin}</td>
             <td>${row.avgIVB}</td>
             <td>${row.avgHB}</td>
-            <td>${pct(row.whiffPct)}</td>
-            <td>${pct(row.strikePct)}</td>
-            <td>${pct(row.zonePct)}</td>
+            <td>${row.avgRelHeight}</td>
+            <td>${row.avgExtension}</td>
+            <td>${row.avgTilt}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -443,6 +443,19 @@ function getNumericMax(rows, key, digits = 1) {
   return Math.max(...vals).toFixed(digits);
 }
 
+function getMostCommonTilt(rows) {
+  const counts = {};
+
+  rows.forEach(r => {
+    const tilt = String(r.Tilt || '').trim();
+    if (!tilt) return;
+    counts[tilt] = (counts[tilt] || 0) + 1;
+  });
+
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return entries.length ? entries[0][0] : '--';
+}
+
 function updateFromTrackman(rows) {
   const grouped = {};
   const matched = new Set();
@@ -532,43 +545,19 @@ function updateFromTrackman(rows) {
     });
 
     player.pitchMetrics = Object.entries(pitchGroups)
-      .map(([pitchType, rows]) => {
-        const count = rows.length;
-
-        const pitchStrikeRows = rows.filter(r =>
-          ['StrikeCalled', 'StrikeSwinging', 'FoulBall', 'FoulBallNotFieldable', 'InPlay'].includes(r.PitchCall)
-        );
-
-        const pitchWhiffRows = rows.filter(r =>
-          ['StrikeSwinging', 'StrikeSwingingBlocked'].includes(r.PitchCall)
-        );
-
-        const pitchZoneRows = rows.filter(r => {
-          const side = Number(r.PlateLocSide);
-          const height = Number(r.PlateLocHeight);
-          return (
-            Number.isFinite(side) &&
-            Number.isFinite(height) &&
-            side >= -0.83 &&
-            side <= 0.83 &&
-            height >= 1.5 &&
-            height <= 3.5
-          );
-        });
-
-        return {
-          pitchType,
-          count,
-          avgVelo: getNumericAverage(rows, 'RelSpeed', 1),
-          maxVelo: getNumericMax(rows, 'RelSpeed', 1),
-          avgSpin: getNumericAverage(rows, 'SpinRate', 0),
-          avgIVB: getNumericAverage(rows, 'InducedVertBreak', 1),
-          avgHB: getNumericAverage(rows, 'HorzBreak', 1),
-          whiffPct: count ? pitchWhiffRows.length / count : 0,
-          strikePct: count ? pitchStrikeRows.length / count : 0,
-          zonePct: count ? pitchZoneRows.length / count : 0
-        };
-      })
+      .map(([pitchType, pitchRows]) => ({
+        pitchType,
+        count: pitchRows.length,
+        usagePct: total ? pitchRows.length / total : 0,
+        avgVelo: getNumericAverage(pitchRows, 'RelSpeed', 1),
+        maxVelo: getNumericMax(pitchRows, 'RelSpeed', 1),
+        avgSpin: getNumericAverage(pitchRows, 'SpinRate', 0),
+        avgIVB: getNumericAverage(pitchRows, 'InducedVertBreak', 1),
+        avgHB: getNumericAverage(pitchRows, 'HorzBreak', 1),
+        avgRelHeight: getNumericAverage(pitchRows, 'RelHeight', 2),
+        avgExtension: getNumericAverage(pitchRows, 'Extension', 2),
+        avgTilt: getMostCommonTilt(pitchRows)
+      }))
       .sort((a, b) => b.count - a.count);
   });
 
