@@ -46,6 +46,8 @@ function ensurePlayer(name) {
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0]
       ],
+      rhhLocations: [],
+      lhhLocations: [],
       pitchMetrics: []
     };
   }
@@ -55,8 +57,8 @@ function ensurePlayer(name) {
 function normalizeName(name) {
   return String(name || '')
     .toLowerCase()
-    .replace(/[^a-z\s,]/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/[^a-z\\s,]/g, '')
+    .replace(/\\s+/g, ' ')
     .trim();
 }
 
@@ -285,41 +287,85 @@ function renderStrikeZone() {
   }
 }
 
-function heatClass(v) {
-  if (v >= 5) return 'darkgreen';
-  if (v === 4) return 'green';
-  if (v === 3) return 'yellow';
-  if (v === 2) return 'orange';
-  return 'red';
+function getPitchColor(pitchType) {
+  const pt = String(pitchType || '').toLowerCase();
+  if (
+    pt.includes('fastball') ||
+    pt.includes('sinker') ||
+    pt.includes('cutter') ||
+    pt.includes('four') ||
+    pt.includes('two')
+  ) {
+    return '#2563eb';
+  }
+  return '#dc2626';
 }
 
-function renderHeatMap(elId, values) {
-  const grid = document.getElementById(elId);
-  if (!grid) return;
+function renderPitchPlot(elId, rows) {
+  const container = document.getElementById(elId);
+  if (!container) return;
 
-  grid.innerHTML = '';
-  const topLabels = ['', 'Arm', 'Glove', 'Waste', 'Middle', 'Chase'];
+  const width = 320;
+  const height = 320;
+  const pad = 30;
 
-  topLabels.forEach(label => {
-    const d = document.createElement('div');
-    d.className = label ? 'heat-label' : '';
-    d.textContent = label;
-    grid.appendChild(d);
-  });
+  const xMin = -2.0;
+  const xMax = 2.0;
+  const yMin = 0.5;
+  const yMax = 4.5;
 
-  ['Top', 'Heart', 'Bottom'].forEach((rowLabel, rIndex) => {
-    const row = document.createElement('div');
-    row.className = 'heat-label';
-    row.textContent = rowLabel;
-    grid.appendChild(row);
+  const zoneLeft = -0.83;
+  const zoneRight = 0.83;
+  const zoneTop = 3.5;
+  const zoneBottom = 1.5;
 
-    values[rIndex].forEach(value => {
-      const d = document.createElement('div');
-      d.className = `heat-cell ${heatClass(value)}`;
-      d.textContent = value || '';
-      grid.appendChild(d);
-    });
-  });
+  const xScale = x => pad + ((x - xMin) / (xMax - xMin)) * (width - pad * 2);
+  const yScale = y => height - pad - ((y - yMin) / (yMax - yMin)) * (height - pad * 2);
+
+  const circles = rows
+    .filter(r => Number.isFinite(r.side) && Number.isFinite(r.height))
+    .map(r => {
+      const cx = xScale(r.side);
+      const cy = yScale(r.height);
+      const color = getPitchColor(r.pitchType);
+      return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4.5" fill="${color}" fill-opacity="0.72" stroke="#111827" stroke-width="0.7">
+        <title>${r.pitchType} | ${r.pitchCall} | x:${r.side.toFixed(2)} y:${r.height.toFixed(2)}</title>
+      </circle>`;
+    })
+    .join('');
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${width} ${height}" width="100%" height="100%" aria-label="Pitch location plot">
+      <rect x="0" y="0" width="${width}" height="${height}" fill="white"></rect>
+
+      <rect
+        x="${xScale(zoneLeft)}"
+        y="${yScale(zoneTop)}"
+        width="${xScale(zoneRight) - xScale(zoneLeft)}"
+        height="${yScale(zoneBottom) - yScale(zoneTop)}"
+        fill="none"
+        stroke="#111827"
+        stroke-width="2"
+      ></rect>
+
+      <line x1="${xScale((zoneLeft + zoneRight) / 2)}" y1="${yScale(zoneTop)}" x2="${xScale((zoneLeft + zoneRight) / 2)}" y2="${yScale(zoneBottom)}" stroke="#9ca3af" stroke-width="1"></line>
+      <line x1="${xScale(zoneLeft)}" y1="${yScale(zoneTop + (zoneBottom - zoneTop) / 3)}" x2="${xScale(zoneRight)}" y2="${yScale(zoneTop + (zoneBottom - zoneTop) / 3)}" stroke="#9ca3af" stroke-width="1"></line>
+      <line x1="${xScale(zoneLeft)}" y1="${yScale(zoneTop + ((zoneBottom - zoneTop) / 3) * 2)}" x2="${xScale(zoneRight)}" y2="${yScale(zoneTop + ((zoneBottom - zoneTop) / 3) * 2)}" stroke="#9ca3af" stroke-width="1"></line>
+
+      <rect
+        x="${xScale(-1.5)}"
+        y="${yScale(4.0)}"
+        width="${xScale(1.5) - xScale(-1.5)}"
+        height="${yScale(1.0) - yScale(4.0)}"
+        fill="none"
+        stroke="#d1d5db"
+        stroke-width="1.5"
+        stroke-dasharray="4 4"
+      ></rect>
+
+      ${circles}
+    </svg>
+  `;
 }
 
 function renderTeamDashboard() {
@@ -344,38 +390,6 @@ function renderTeamDashboard() {
   });
 }
 
-function buildHeatMap(rows) {
-  const grid = [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ];
-
-  rows.forEach(r => {
-    const side = Number(r.PlateLocSide);
-    const height = Number(r.PlateLocHeight);
-    if (!Number.isFinite(side) || !Number.isFinite(height)) return;
-
-    let col = 4;
-    if (side < -0.8) col = 0;
-    else if (side < -0.2) col = 1;
-    else if (side < 0.4) col = 2;
-    else if (side < 1.0) col = 3;
-
-    let row = 2;
-    if (height > 2.9) row = 0;
-    else if (height > 1.7) row = 1;
-
-    grid[row][col] += 1;
-  });
-
-  const max = Math.max(1, ...grid.flat());
-
-  return grid.map(row =>
-    row.map(v => (v === 0 ? 0 : Math.max(1, Math.min(5, Math.round((v / max) * 5)))))
-  );
-}
-
 function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -386,9 +400,9 @@ function parseCsv(text) {
     const char = text[i];
     const next = text[i + 1];
 
-    if (char === '"') {
-      if (inQuotes && next === '"') {
-        value += '"';
+    if (char === '\"') {
+      if (inQuotes && next === '\"') {
+        value += '\"';
         i++;
       } else {
         inQuotes = !inQuotes;
@@ -396,8 +410,8 @@ function parseCsv(text) {
     } else if (char === ',' && !inQuotes) {
       row.push(value);
       value = '';
-    } else if ((char === '\n' || char === '\r') && !inQuotes) {
-      if (char === '\r' && next === '\n') i++;
+    } else if ((char === '\\n' || char === '\\r') && !inQuotes) {
+      if (char === '\\r' && next === '\\n') i++;
       row.push(value);
       if (row.some(cell => String(cell).trim() !== '')) rows.push(row);
       row = [];
@@ -533,8 +547,23 @@ function updateFromTrackman(rows) {
       k: lhh.filter(r => r.KorBB === 'Strikeout').length
     };
 
-    player.heatRHH = buildHeatMap(rhh);
-    player.heatLHH = buildHeatMap(lhh);
+    player.rhhLocations = rhh
+      .map(r => ({
+        side: Number(r.PlateLocSide),
+        height: Number(r.PlateLocHeight),
+        pitchType: r.TaggedPitchType || r.AutoPitchType || 'Unknown',
+        pitchCall: r.PitchCall || ''
+      }))
+      .filter(r => Number.isFinite(r.side) && Number.isFinite(r.height));
+
+    player.lhhLocations = lhh
+      .map(r => ({
+        side: Number(r.PlateLocSide),
+        height: Number(r.PlateLocHeight),
+        pitchType: r.TaggedPitchType || r.AutoPitchType || 'Unknown',
+        pitchCall: r.PitchCall || ''
+      }))
+      .filter(r => Number.isFinite(r.side) && Number.isFinite(r.height));
 
     const pitchGroups = {};
 
@@ -580,8 +609,8 @@ function renderAll() {
   renderPlatoon(player);
   renderWeeklyThrows(player);
   renderStrikeZone();
-  renderHeatMap('heatMapRHH', player.heatRHH);
-  renderHeatMap('heatMapLHH', player.heatLHH);
+  renderPitchPlot('heatMapRHH', player.rhhLocations || []);
+  renderPitchPlot('heatMapLHH', player.lhhLocations || []);
   renderTeamDashboard();
 }
 
