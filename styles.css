@@ -314,7 +314,7 @@ textarea {
 /* New plot containers */
 #heatMapRHH,
 #heatMapLHH {
-  width: 360%;
+  width: 100%;
   min-height: 420px;
   display: flex;
   flex-direction: column;
@@ -325,8 +325,8 @@ textarea {
 /* SVG plot sizing */
 #heatMapRHH svg,
 #heatMapLHH svg {
-  width: 360%;
-  max-width: 360px;
+  width: 420%;
+  max-width: 420px;
   height: auto;
   display: block;
 }
