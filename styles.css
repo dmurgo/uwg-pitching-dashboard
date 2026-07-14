@@ -272,16 +272,16 @@ textarea {
 }
 
 .zone-card {
-  min-height: 440px;
+  min-height: 320px;
 }
 
 .strike-zone {
-  width: 240px;
+  width: 210px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 48px);
-  gap: 5px;
+  grid-template-rows: repeat(5, 42px);
+  gap: 4px;
 }
 
 .zone-cell,
@@ -306,39 +306,40 @@ textarea {
   background: #d9ead3;
 }
 
-/* Old heat-grid kept harmless in case anything still references it */
 .heat-grid {
-  width: 100%;
+  display: grid;
+  grid-template-columns: 70px repeat(5, 1fr);
+  gap: 4px;
 }
 
-/* New plot containers */
-#heatMapRHH,
-#heatMapLHH {
-  width: 100%;
-  min-height: 420px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-/* SVG plot sizing */
-#heatMapRHH svg,
-#heatMapLHH svg {
-  width: 420%;
-  max-width: 420px;
-  height: auto;
-  display: block;
-}
-
-/* Optional empty-state styling */
-.empty-state {
+.heat-label {
+  background: var(--uwg-dark);
+  color: var(--uwg-white);
+  border-radius: 6px;
+  padding: 0.7rem 0.4rem;
   text-align: center;
-  color: #666;
-  padding: 1.25rem;
-  border: 1px dashed var(--uwg-border);
-  border-radius: 12px;
-  background: #fafafa;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.heat-cell.red {
+  background: #f4cccc;
+}
+
+.heat-cell.orange {
+  background: #fce5cd;
+}
+
+.heat-cell.yellow {
+  background: #fff2cc;
+}
+
+.heat-cell.green {
+  background: #d9ead3;
+}
+
+.heat-cell.darkgreen {
+  background: #b6d7a8;
 }
 
 @media (max-width: 1300px) {
